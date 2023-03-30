@@ -3,4 +3,6 @@ ffmpeg -i "concat:$(ls -v downloads/*.ts | tr '\n' '|')" -c copy output.mp4
 ffmpeg -i "concat:$(ls -v downloads/*.ts | tr '\n' '|')" -vf "drawtext=text='PYONERIP.COM':x=10:y=h-th-10:fontcolor=white@0.5:fontsize=12:alpha=0.3" -c:v libx264 -preset ultrafast -crf 23 -c:a aac -b:a 128k output.mp4
 ffmpeg -i "concat:$(ls -v downloads/*.ts | tr '\n' '|')" -vf "drawtext=text='PYONERIP.COM':x=10:y=h-th-10:fontcolor=white@0.5:fontsize=12:alpha=0.5" -c:v libx264 -preset medium -crf 23 -c:a aac -b:a 128k output.mp4
 
+`ffmpeg -i "concat:$(ls -v ${id}[${resolution}]/*.ts | tr '\n' '|')" -vf "drawtext=text='PYONERIP.COM':x=10:y=h-th-10:fontcolor=white@0.5:fontsize=12:alpha=0.5" -c:v libx264 -preset medium -crf 23 -c:a aac -b:a 128k ${id}[${resolution}].mp4`
+
 
