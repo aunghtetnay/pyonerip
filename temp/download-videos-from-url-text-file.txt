@@ -1,0 +1,1 @@
+wget -i urls.txt -P downloads/ -t 3 --limit-rate=1M
