@@ -3,6 +3,8 @@ import { Worker, workerData } from 'node:worker_threads'
 import crawl from './crawl.js'
 import parsePlaylistFromUrl from './parsePlaylistFromUrl.js'
 import parseVideoFromUrl from './parseVideoFromUrl.js'
+import saveChunks from './saveChunks.js'
+import { resolve } from 'node:url'
 
 export async function downloadChunks({ id, resolution, result: { urls: videoUrls } }) {
     return new Promise((resolve, reject) => {
@@ -35,11 +37,11 @@ try {
     const promises = Object.entries(chunkUrls.resolutionM3U8FileUrlMap).map(([resolution, url]) => parseVideoFromUrl(url))
     const result = await Promise.all(promises)
     console.log('available resolutions: ', result.map(item => item.resolution))
-    console.log('first one: ', result[0], result[0].chunksUrlList.length)
-    // const success = await downloadChunks(chunkUrls)
-    // const { filename } = await mergeChunks(chunkUrls)
-    // console.log('finished', filename)
 
+    const item = result[0]
+    console.log('first one: ', item.resolution, item.totalDuration, item.baseUrl)
+    const dirname = await saveChunks(`title${item.resolution}`, item.chunksUrlList.map((url) => `${item.baseUrl}/${url}`))
+    console.log('dirname', dirname)
 } catch (e) {
     console.log('errorkasdf', e)
 }
