@@ -1,46 +1,23 @@
-import { Worker, workerData } from 'node:worker_threads'
-
-import parsePlaylist from './parsePlaylist.js'
 import crawl from './crawl.js'
-
-export async function ripVideo({ id, resolution, url }) {
-    return new Promise((resolve, reject) => {
-        const worker = new Worker('./worker.js', { workerData: { id, resolution, url } })
-        worker.on('message', resolve)
-        worker.on('error', reject)
-        worker.on('exit', (code) => {
-            if (code != 0) reject(new Error(`Worker stopped with exit code ${code}`))
-        })
-    })
-}
-
-export default async function ripPlaylist(url) {
-    const { id, streams } = await parsePlaylist(url)
-    // const workerPromises = Object.keys(streams).map((key) => ripVideo({ id, resolution: key, url: streams[key] }))
-    // return Promise.all(workerPromises)
-    // console.log(streams)
-
-    const key = '352x240'
-    return await ripVideo({ id, resolution: key, url: streams[key] })
-}
-
-export async function downloadAndMergeChunks({ id, resolution, result: { totalDuration, urls: videoUrls } }) {
-    return new Promise((resolve, reject) => {
-        const worker = new Worker('./downloader_worker.js', { workerData: { id, resolution, videoUrls } })
-        worker.on('message', resolve)
-        worker.on('error', reject)
-        worker.on('exit', (code) => {
-            if (code != 0) reject(new Error(`DownloadAndMerge worker stopped with exit code ${code}`))
-        })
-    })
-}
+import parsePlaylistFromUrl from './parsePlaylistFromUrl.js'
+import parseVideoFromUrl from './parseVideoFromUrl.js'
+import saveChunks from './saveChunks.js'
+import mergeChunks from './mergeChunks.js'
 
 try {
-    const m3u8Url = await crawl('https://www.pyoneplay.com/watch/01gwq4azhhgp38v3xj03es3m81')
-    // console.log('hmm?', m3u8Url)
-    const result = await ripPlaylist(m3u8Url)
-    const r = await downloadAndMergeChunks(result)
-    console.log('r is', r)
+    const m3u8Url = await crawl('https://www.pyoneplay.com/watch/01gwccf5f5mh9bdat23zv6jagh')
+    const chunkUrls = await parsePlaylistFromUrl(m3u8Url)
+    console.log(chunkUrls)
+    const promises = Object.entries(chunkUrls.resolutionM3U8FileUrlMap).map(([resolution, url]) => parseVideoFromUrl(url))
+    const result = await Promise.all(promises)
+    console.log('available resolutions: ', result.map(item => item.resolution))
+
+    const item = result[0]
+    console.log('first one: ', item.resolution, item.totalDuration, item.baseUrl)
+    const dirname = await saveChunks(`title${item.resolution}`, item.chunksUrlList.map((url) => `${item.baseUrl}/${url}`))
+    console.log('dirname', dirname)
+    const resultPath = await mergeChunks(`title${item.resolution}`)
+    console.log('resultPath', resultPath)
 } catch (e) {
     console.log('errorkasdf', e)
 }

@@ -1,5 +1,0 @@
-wget -i urls.txt -P downloads/ -t 3 --limit-rate=10M
-
-wget -i $'link1\nlink2\nlink3' -P downloads/ -t 3 --limit-rate=10M
-
-`wget -i $'${}' -P ${}/ -t 3 --limit-rate=10M`
