@@ -1,4 +1,4 @@
-import parsePlaylist from './parsePlaylist.js'
+import parsePlaylist from './parsePlaylistFromUrl.js'
 import readFileUrlContent from './readFileUrlContent.js'
 
 import { inspect } from 'node:util'
