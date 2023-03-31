@@ -13,7 +13,7 @@ const result = await ripVideo(url)
 // await new Promise((resolve, reject) => {
 
 
-//     const worker = new Worker('./downloader_worker.js', { workerData: { id, resolution, videoUrls: result } })
+//     const worker = new Worker('./download_worker.js', { workerData: { id, resolution, videoUrls: result } })
 //     worker.on('message', (msg) => console.log('in worker.js', msg))
 //     worker.on('error', reject)
 //     worker.on('exit', resolve)
