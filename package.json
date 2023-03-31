@@ -4,10 +4,12 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "dev": "node index.js"
+    "dev": "node index.js",
+    "crawl": "node index.js"
   },
   "license": "MIT",
   "dependencies": {
-    "m3u8": "^0.0.10"
+    "m3u8": "^0.0.10",
+    "puppeteer": "^19.8.2"
   }
 }

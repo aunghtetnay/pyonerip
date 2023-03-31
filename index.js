@@ -1,6 +1,7 @@
 import { Worker, workerData } from 'node:worker_threads'
 
 import parsePlaylist from './parsePlaylist.js'
+import crawl from './crawl.js'
 
 export async function ripVideo({ id, resolution, url }) {
     return new Promise((resolve, reject) => {
@@ -35,9 +36,11 @@ export async function downloadAndMergeChunks({ id, resolution, result: { totalDu
 }
 
 try {
-    const r = await ripPlaylist('https://vz-30d21f49-6b1.b-cdn.net/bcdn_token=kTry1_eGIbGVk-MKu9nRnVeT8bMs2UMuwP954C67jbo&expires=1680224026&token_path=%2Fefa1441b-efad-4d04-9639-f0bc973a16fa%2F/efa1441b-efad-4d04-9639-f0bc973a16fa/playlist.m3u8')
-    const result = await downloadAndMergeChunks(r)
-    console.log(result)
+    const m3u8Url = await crawl('https://www.pyoneplay.com/watch/01gwq4azhhgp38v3xj03es3m81')
+    // console.log('hmm?', m3u8Url)
+    const result = await ripPlaylist(m3u8Url)
+    const r = await downloadAndMergeChunks(result)
+    console.log('r is', r)
 } catch (e) {
     console.log('errorkasdf', e)
 }
