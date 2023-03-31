@@ -1,7 +1,7 @@
 # pyonerip
 PyonePlay ripper.
 
-Pyone Play Ripper is a Node.js module that allows you to rip videos from Pyone Play platform. It works by crawling the Pyone Play website using Puppeteer, parsing the H3U8 file, and downloading the .ts chunks using wget. The downloaded chunks are then merged into a single video using ffmpeg.
+**Pyone Play Ripper** is a Node.js module that allows you to rip videos from [Pyone Play platform](https://www.pyoneplay.com/). It works by crawling the [Pyone Play website](https://www.pyoneplay.com/) using `Puppeteer`, parsing the `H3U8` file, and downloading the .ts chunks using `wget`. The downloaded chunks are then merged into a single video using `ffmpeg`.
 
 ## Installation
 
