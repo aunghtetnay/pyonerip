@@ -1,50 +1,24 @@
 # pyonerip
-PyonePlay ripper.
 
-**Pyone Play Ripper** is a Node.js module that allows you to rip videos from [Pyone Play platform](https://www.pyoneplay.com/). It works by crawling the [Pyone Play website](https://www.pyoneplay.com/) using `Puppeteer`, parsing the `H3U8` file, and downloading the .ts chunks using `wget`. The downloaded chunks are then merged into a single video using `ffmpeg`.
+## Pyone Play Ripper
+
+**Pyone Play Ripper** is a Node.js module that allows you to rip videos from [Pyone Play platform](https://www.pyoneplay.com/). It works by ~crawling the [Pyone Play website](https://www.pyoneplay.com/) using `Puppeteer`~ using the original site's endpoints to get the video stream, parsing the `H3U8` file, and downloading the .ts chunks using `wget`. The downloaded chunks are then merged into a single video using `ffmpeg`.
 
 ## Installation
 
-To use Pyone Play Ripper, you'll need to have Node.js installed on your system. Once you have Node.js installed, you can install Pyone Play Ripper by running the following command:
-
-```bash
-npm install pyone-play-ripper
-```
+To use Pyone Play Ripper, you'll need to have `Node.js`, `wget`, and `ffmpeg` installed on your system. You can install Node.js from [Nodejs.org](nodejs.org), `wget` from [gnu.org](gnu.org), and ffmpeg from [ffmpeg.org](ffmpeg.org).
 
 ## Usage
 
-To use Pyone Play Ripper, you'll need to require it in your Node.js project:
+To use Pyone Play Ripper, you need to follow these steps:
 
-```javascript
-const PyonePlayRipper = require('pyone-play-ripper');
-```
+1. Clone or download this repository to your local machine
+2. Open a terminal and navigate to the project directory
+3. Install the required dependencies by running npm install
+4. Check the index.js file for usage details
 
-You can then use Pyone Play Ripper to rip a video by calling the ripVideo method:
-
-```javascript
-const videoUrl = 'https://www.pyoneplay.com/watch/123456';
-const outputDir = './videos';
-const options = {
-  concurrency: 4,
-  ffmpegPath: '/usr/local/bin/ffmpeg'
-};
-
-PyonePlayRipper.ripVideo(videoUrl, outputDir, options)
-  .then(() => {
-    console.log('Video has been ripped successfully!');
-  })
-  .catch((error) => {
-    console.error('An error occurred while ripping the video:', error);
-  });
-```
-
-The ripVideo method takes three arguments:
-
-- `videoUrl`: the URL of the Pyone Play video you want to rip
-- `outputDir`: the directory where the ripped video will be saved
-- `options`: an object containing optional parameters
-- - `concurrency`: the maximum number of simultaneous downloads (default: 4)
-- - `ffmpegPath`: the path to the ffmpeg executable (default: 'ffmpeg')
+The output directory and file name will be automatically generated based on the ID and resolution you provide
+~ For example, to download a video with the ID "123456" and resolution "480p", you would run the following command:~
 
 ## Performance
 
@@ -54,7 +28,15 @@ Increase the concurrency option to download more chunks simultaneously
 
 - Use a faster internet connection or a server with higher bandwidth
 - Use a faster machine or a machine with more cores for the ripping process
-- Optimize the Puppeteer and ffmpeg settings to reduce the CPU and memory usage
+- Optimize ffmpeg settings to reduce the CPU and memory usage
+
+## To-Do
+
+- Improve error handling and error messages
+- Implement a progress bar or other visual feedback for the download process
+- ~ Add support for downloading subtitles or other video metadata ~
+- ~ Implement automatic detection of the available resolutions for a given video ID ~
+- ~ Add support for downloading multiple resolutions of the same video ID simultaneously ~
 
 ## License
 
