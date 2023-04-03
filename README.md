@@ -34,9 +34,9 @@ Increase the concurrency option to download more chunks simultaneously
 
 - Improve error handling and error messages
 - Implement a progress bar or other visual feedback for the download process
-- ~ Add support for downloading subtitles or other video metadata ~
-- ~ Implement automatic detection of the available resolutions for a given video ID ~
-- ~ Add support for downloading multiple resolutions of the same video ID simultaneously ~
+~Add support for downloading subtitles or other video metadata~
+~Implement automatic detection of the available resolutions for a given video ID~
+~Add support for downloading multiple resolutions of the same video ID simultaneously~
 
 ## License
 
