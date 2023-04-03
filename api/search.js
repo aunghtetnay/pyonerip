@@ -1,6 +1,6 @@
 import { PP_API_URL } from '../config.js'
 
-export async function Search({ keywords }) {
+export default async function Search({ keywords }) {
     const encodedKeywords = encodeURIComponent(keywords)
     const res = await fetch(`${PP_API_URL}/search?keywords=${encodedKeywords}`)
     return await res.json()
