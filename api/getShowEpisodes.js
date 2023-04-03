@@ -1,6 +1,6 @@
 import { PP_API_URL } from '../config.js'
 
-export default async function getShow({ showId }) {
+export default async function getShowEpisodes({ showId }) {
     const res = await fetch(`${PP_API_URL}/shows/${showId}/episodes`)
     return await res.json()
 }

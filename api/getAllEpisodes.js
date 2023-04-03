@@ -1,4 +1,6 @@
-export default async function rip({ page }) {
+import { PP_API_URL } from '../config.js'
+
+export default async function getAllEpisodes({ page }) {
     const res = await fetch(`${PP_API_URL}/episodes?page=${page}`)
     return await res.json()
 }
