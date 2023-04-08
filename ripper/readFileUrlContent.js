@@ -4,12 +4,14 @@ import m3u8 from 'm3u8'
 
 // PlaylistItem, StreamItem
 
-export default async function readFileUrlContent(uri) {
+export default async function readFileUrlContent(uri, timeout = 10_000) {
     return new Promise((resolve, reject) => {
             const parsedUrl = url.parse(uri)
 
             const options = {
                 ...parsedUrl,
+                // need to set timeout here to if req is hanging
+                timeout,
                 method: 'GET'
             }
 
@@ -27,6 +29,8 @@ export default async function readFileUrlContent(uri) {
             req.on('error', (e) => {
                 reject(e)
             });
+            
+            req.on('timeout', () => reject(new Error('Timeout getting m3u8 file')))
 
             req.end();
     })
