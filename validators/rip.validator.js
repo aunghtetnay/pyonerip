@@ -13,9 +13,16 @@ export async function validateParse(req, res, next) {
     }
 }
 
+const filenameRegex = /^[a-zA-Z0-9\-]+$/
+const filenameErrorMessage = 'Invalid filename. Only alphanumeric characters and dashes are allowed.'
+const urlRegex = /video.m3u8$/
+const urlErrorMessage = 'Invalid url. Not ending with video.m3u8'
 const ripSchema = object({
-    name: string().required(),
-    url: string().matches(/video.m3u8$/, { message: 'invalid resolutionUrl' }).required()
+    // IMPORTANT:
+    // sanitize name, so that dangerous unix commands can't be executed
+    name: string().matches(filenameRegex, { message: filenameErrorMessage }).required(),
+    // validate correct url
+    url: string().matches(urlRegex, { message: urlErrorMessage }).required()
 })
 
 export async function validateRip(req, res, next) {
