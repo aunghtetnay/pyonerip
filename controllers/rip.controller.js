@@ -20,6 +20,6 @@ export async function rips(req, res) {
         res.status(200).json(result)
     } catch (error) {
         console.log(error)
-        res.status(500).json({ name: 'RipError', message: error.message })
+        res.status(500).json(error.message)
     }
 }
