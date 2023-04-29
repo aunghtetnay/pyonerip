@@ -5,7 +5,7 @@ import helmet from 'helmet'
 import compression from 'compression'
 import rateLimit from 'express-rate-limit'
 import swaggerUi from 'swagger-ui-express'
-import swaggerDocument from './swagger.json'
+import swaggerDocument from './swagger.json' assert { type: 'json' }
 
 import showRouter from './routers/show.router.js'
 import episodeRouter from './routers/episode.router.js'

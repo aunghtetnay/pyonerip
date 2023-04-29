@@ -1,0 +1,192 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "version": "1.0.0",
+    "title": "Example API"
+  },
+  "servers": [
+    {
+      "url": "https://example.com/api/v1"
+    },
+    {
+      "url": "https://app.pyoneplay.com/api/v1"
+    }
+  ],
+  "paths": {
+    "/api/v1/rip": {
+      "post": {
+        "tags": ["Rip"],
+        "summary": "Rip the episode with given name",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RipRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/rip/parse": {
+      "post": {
+        "tags": ["Rip"],
+        "summary": "Parse the streamingUrl and return available resolutions",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ParseRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/shows": {
+      "get": {
+        "tags": ["Shows"],
+        "summary": "Get all shows",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Page number",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/episodes": {
+      "get": {
+        "tags": ["Episodes"],
+        "summary": "Get all episodes",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Page number",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/shows/{showId}/episodes": {
+      "get": {
+        "tags": ["Episodes"],
+        "summary": "Get show's episodes",
+        "parameters": [
+          {
+            "name": "showId",
+            "in": "path",
+            "description": "ID of the show",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/channels": {
+      "get": {
+        "tags": ["Channels"],
+        "summary": "Get all channels",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/search": {
+      "get": {
+        "tags": ["Search"],
+        "summary": "Search shows and actors",
+        "parameters": [
+          {
+            "name": "keywords",
+            "in": "query",
+            "description": "Keywords to search for",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "RipRequest": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "required": ["url", "name"],
+          "example": {
+            "url": "https://example.com/episode1.mp4",
+            "name": "Episode 1"
+          }
+        },
+        "ParseRequest": {
+          "type": "object",
+          "properties": {
+            "streamingUrl": {
+              "type": "string"
+            }
+          },
+          "required": ["streamingUrl"],
+          "example": {
+            "streamingUrl": "https://example.com/streaming1"
+          }
+        }
+      }
+    }
+  }
+}
