@@ -4,6 +4,8 @@ import cors from 'cors'
 import helmet from 'helmet'
 import compression from 'compression'
 import rateLimit from 'express-rate-limit'
+import swaggerUi from 'swagger-ui-express'
+import swaggerDocument from './swagger.json'
 
 import showRouter from './routers/show.router.js'
 import episodeRouter from './routers/episode.router.js'
@@ -29,6 +31,8 @@ app.use(rateLimit({
 }))
 
 // routes
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument))
+
 app.use('/api/v1/shows', showRouter)
 app.use('/api/v1/episodes', episodeRouter)
 app.use('/api/v1/channels', channelRouter)
