@@ -16,8 +16,7 @@ export async function upload(path, Key) {
         Bucket: S3_BUCKET_NAME,
         Key,
         Body: rs,
+        ContentType: 'video/mp4',
     }
-    const result = await s3Client.send(new PutObjectCommand(uploadParams))
-    console.log(result)
-    return result
+    return await s3Client.send(new PutObjectCommand(uploadParams))
 }
