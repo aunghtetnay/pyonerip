@@ -1,3 +1,5 @@
+import { remove } from 'fs-extra'
+
 import { availableResolutions, rip } from '../ripper/index.js'
 import { upload } from '../helpers/uploadToS3.js'
 
@@ -19,8 +21,11 @@ export async function rips(req, res) {
         console.log(`processing: ${streaming_url}, ${name}`)
         const resultPath = await rip({ name, url: streaming_url })
         // strip the path to get the filename
-        const resultFileName = resultPath.slice(resultPath.lastIndexOf('/') + 1)
-        const uploaded = await upload(resultPath, `${series_name}/${resultFileName}`)
+        const [folderName, fileName] = resultPath.split('/')
+        const uploaded = await upload(resultPath, `${series_name}/${fileName}`)
+        // clean up
+        await remove(folderName)
+        // return the aws sdk upload result
         res.status(200).json(uploaded)
 
     } catch (error) {
