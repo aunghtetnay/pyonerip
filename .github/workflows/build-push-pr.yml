@@ -32,7 +32,7 @@ jobs:
     with:
       file_to_build: Dockerfile
       push_to_images: |
-        ghcr.io/patchwork-hub/patchwork_dashboard
+        ghcr.io/aunghtetnay/pyonerip
       version_metadata: ${{ needs.compute-suffix.outputs.metadata }}
       flavor: |
         latest=auto
