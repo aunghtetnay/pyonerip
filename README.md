@@ -168,7 +168,38 @@ const cp = spawn('ffmpeg', ffmpegOptions, { stdio: 'inherit' })
 
 After the spawn method is called, the child process's events are listened to. If the child process exits with a non-zero exit code, the returned promise is rejected with the error code. If the child process exits with a zero exit code, the returned promise is resolved with the output file name.
 
-## 🛠️ Development
+## Security & Monitoring
+
+### Security Scanning
+
+All Docker images are automatically scanned for vulnerabilities using Trivy:
+- **Vulnerability scanning**: Checks for known CVEs in OS and library dependencies
+- **Configuration scanning**: Validates Docker best practices
+- **Severity filtering**: Blocks deployment for CRITICAL/HIGH severity issues
+- **Security reports**: Available in GitHub Security tab
+
+### Security Updates
+
+To update dependencies and fix security vulnerabilities:
+
+```bash
+# Run the security update script
+./scripts/security-update.sh
+
+# Or manually update
+npm audit fix
+npm audit --audit-level high
+```
+
+### Current Security Status
+
+The project follows security best practices:
+- Automated dependency scanning with Trivy
+- Non-root Docker container execution
+- Regular dependency updates via Dependabot
+- Security-first CI/CD pipeline (scan before publish)
+
+## Development
 
 ### Building Locally
 

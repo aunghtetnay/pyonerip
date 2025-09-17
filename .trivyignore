@@ -1,0 +1,12 @@
+# Trivy ignore file for pyonerip
+# This file contains CVEs that are temporarily ignored
+# Remove entries as vulnerabilities are fixed
+
+# Node.js vulnerabilities - being addressed in package.json updates
+# CVE-2024-45590  # body-parser DoS vulnerability - fixed in body-parser 1.20.3
+# CVE-2024-21538  # cross-spawn ReDoS vulnerability - fixed in cross-spawn 7.0.5
+# CVE-2024-45296  # path-to-regexp ReDoS vulnerability - fixed in path-to-regexp 8.0.0
+# CVE-2024-52798  # path-to-regexp ReDoS vulnerability - fixed in path-to-regexp 0.1.12
+
+# Uncomment lines above to temporarily ignore specific CVEs during development
+# Always remove ignores once vulnerabilities are properly fixed
