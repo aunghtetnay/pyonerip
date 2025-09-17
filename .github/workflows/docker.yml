@@ -8,6 +8,12 @@ on:
     branches: [ main ]
   workflow_dispatch:
 
+# Required permissions for GitHub Container Registry
+permissions:
+  contents: read
+  packages: write
+  security-events: write
+
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
