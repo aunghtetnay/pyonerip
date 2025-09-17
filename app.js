@@ -33,6 +33,16 @@ app.use(rateLimit({
 // routes
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument))
 
+// Health check endpoint for Docker
+app.get('/health', (req, res) => {
+    res.status(200).json({
+        status: 'OK',
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime(),
+        version: process.env.npm_package_version || '1.0.0'
+    })
+})
+
 app.use('/api/v1/shows', showRouter)
 app.use('/api/v1/episodes', episodeRouter)
 app.use('/api/v1/channels', channelRouter)

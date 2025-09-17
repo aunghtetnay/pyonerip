@@ -1,5 +1,117 @@
 # Pyone Play Ripper
 
+[![Docker Build and Publish](https://github.com/aunghtetnay/pyonerip/actions/workflows/docker.yml/badge.svg)](https://github.com/aunghtetnay/pyonerip/actions/workflows/docker.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Docker Pulls](https://img.shields.io/docker/pulls/ghcr.io/aunghtetnay/pyonerip)](https://github.com/aunghtetnay/pyonerip/pkgs/container/pyonerip)
+
+A robust video ripper for Pyone Play content with Docker support and automated CI/CD pipeline.
+
+## 🚀 Quick Start
+
+### Using Docker (Recommended)
+
+```bash
+# Pull the latest image
+docker pull ghcr.io/aunghtetnay/pyonerip:latest
+
+# Run the container
+docker run -d \
+  --name pyonerip \
+  -p 3000:3000 \
+  -e NODE_ENV=production \
+  ghcr.io/aunghtetnay/pyonerip:latest
+```
+
+### Using Docker Compose
+
+```yaml
+version: '3.8'
+services:
+  pyonerip:
+    image: ghcr.io/aunghtetnay/pyonerip:latest
+    container_name: pyonerip
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+```
+
+### Local Development
+
+```bash
+# Clone the repository
+git clone https://github.com/aunghtetnay/pyonerip.git
+cd pyonerip
+
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
+
+# Or start production server
+npm start
+```
+
+## 📋 API Endpoints
+
+- **Health Check**: `GET /health` - Container health status
+- **API Documentation**: `GET /api-docs` - Swagger UI
+- **Shows**: `GET /api/v1/shows` - List all shows
+- **Episodes**: `GET /api/v1/episodes` - List all episodes
+- **Channels**: `GET /api/v1/channels` - List all channels
+- **Rip**: `POST /api/v1/rip` - Start ripping process
+
+## 🐳 Docker Image Management
+
+### Available Tags
+
+- `latest` - Latest stable release from main branch
+- `develop` - Latest development build
+- `v*` - Specific version tags (e.g., `v1.0.0`)
+- `commit-YYYYMMDD-<sha>` - Specific commit builds
+
+### Multi-Architecture Support
+
+The Docker images are built for multiple architectures:
+- `linux/amd64` (x86_64)
+- `linux/arm64` (ARM64/Apple Silicon)
+
+### Security Features
+
+- **Non-root user**: Container runs as `nodeuser` (UID 1001)
+- **Vulnerability scanning**: Automated scanning with Trivy
+- **Security updates**: Dependabot for dependency updates
+- **Minimal base image**: Alpine Linux for reduced attack surface
+
+## 🔄 CI/CD Pipeline
+
+### Automated Workflows
+
+1. **Docker Build and Publish** (`.github/workflows/docker.yml`)
+   - Triggers on push to `main`/`develop` branches and tags
+   - Multi-stage builds with caching
+   - Multi-architecture builds
+   - Security scanning with Trivy
+   - Automated deployment to staging/production
+
+2. **Dependency Management** (`.github/workflows/dependencies.yml`)
+   - Weekly dependency updates
+   - Security audit scanning
+   - Auto-merge for minor/patch updates
+
+### Deployment Environments
+
+- **Staging**: Auto-deploy from `develop` branch
+- **Production**: Auto-deploy from tagged releases (`v*`)
+
 ## Process
 
 ### Parsing
@@ -55,3 +167,115 @@ const cp = spawn('ffmpeg', ffmpegOptions, { stdio: 'inherit' })
 ```
 
 After the spawn method is called, the child process's events are listened to. If the child process exits with a non-zero exit code, the returned promise is rejected with the error code. If the child process exits with a zero exit code, the returned promise is resolved with the output file name.
+
+## 🛠️ Development
+
+### Building Locally
+
+```bash
+# Build Docker image
+docker build -t pyonerip:local .
+
+# Run locally built image
+docker run -p 3000:3000 pyonerip:local
+```
+
+### Testing
+
+```bash
+# Run tests
+npm test
+
+# Run linting
+npm run lint
+
+# Health check
+curl http://localhost:3000/health
+```
+
+### Environment Variables
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `NODE_ENV` | Environment mode | `development` |
+| `PORT` | Server port | `3000` |
+
+## 📦 Production Deployment
+
+### Kubernetes Example
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pyonerip
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: pyonerip
+  template:
+    metadata:
+      labels:
+        app: pyonerip
+    spec:
+      containers:
+      - name: pyonerip
+        image: ghcr.io/aunghtetnay/pyonerip:latest
+        ports:
+        - containerPort: 3000
+        env:
+        - name: NODE_ENV
+          value: "production"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 3000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 3000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pyonerip-service
+spec:
+  selector:
+    app: pyonerip
+  ports:
+  - port: 80
+    targetPort: 3000
+  type: LoadBalancer
+```
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/amazing-feature`
+3. Commit your changes: `git commit -m 'Add amazing feature'`
+4. Push to the branch: `git push origin feature/amazing-feature`
+5. Open a Pull Request
+
+### Contribution Guidelines
+
+- Follow existing code style
+- Add tests for new features
+- Update documentation as needed
+- Ensure Docker builds pass
+- Security scan must pass
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🔗 Links
+
+- [GitHub Repository](https://github.com/aunghtetnay/pyonerip)
+- [Docker Hub](https://github.com/aunghtetnay/pyonerip/pkgs/container/pyonerip)
+- [Issues](https://github.com/aunghtetnay/pyonerip/issues)
+- [Releases](https://github.com/aunghtetnay/pyonerip/releases)

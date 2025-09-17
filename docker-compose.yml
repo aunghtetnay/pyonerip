@@ -1,13 +1,71 @@
-version: "3.9"
+version: "3.8"
+
 services:
-  app:
-    image: my-node-app
+  pyonerip:
     build:
       context: .
-      dockerfile: Dockerfile-alpine
+      dockerfile: Dockerfile
+      args:
+        BUILDTIME: ${BUILD_DATE:-}
+        VERSION: ${VERSION:-1.0.0}
+        REVISION: ${GIT_COMMIT:-}
+    image: pyonerip:local
+    container_name: pyonerip
     ports:
       - "3000:3000"
     environment:
-      NODE_ENV: production
-      PORT: 3000
+      - NODE_ENV=production
+      - PORT=3000
+    restart: unless-stopped
+    
+    # Health check
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "0.5"
+        reservations:
+          memory: 256M
+          cpus: "0.25"
+    
+    # Volume mounts for development (uncomment for dev mode)
+    # volumes:
+    #   - .:/app
+    #   - /app/node_modules
+    
+    # Development override
+    profiles:
+      - production
+
+  # Development service
+  pyonerip-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: builder
+    container_name: pyonerip-dev
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+    volumes:
+      - .:/app
+      - /app/node_modules
+    command: npm run dev
+    restart: unless-stopped
+    profiles:
+      - development
+
+networks:
+  default:
+    name: pyonerip-network
 
