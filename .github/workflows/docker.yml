@@ -15,8 +15,11 @@ permissions:
   security-events: write
 
 env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
+  # Multi-registry configuration
+  GHCR_REGISTRY: ghcr.io
+  GHCR_IMAGE_NAME: ${{ github.repository }}
+  DOCKERHUB_REGISTRY: docker.io
+  DOCKERHUB_IMAGE_NAME: ahnay/pyonerip
 
 jobs:
   test:
@@ -48,7 +51,7 @@ jobs:
     if: always() && (needs.test.result == 'success' || needs.test.result == 'skipped')
     
     outputs:
-      image-digest: ${{ steps.build.outputs.digest }}
+      image-digest: ${{ steps.build-scan.outputs.digest }}
       image-tags: ${{ steps.meta.outputs.tags }}
     
     steps:
@@ -58,19 +61,29 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Log in to Container Registry
+      - name: Log in to GitHub Container Registry
         if: github.event_name != 'pull_request'
         uses: docker/login-action@v3
         with:
-          registry: ${{ env.REGISTRY }}
+          registry: ${{ env.GHCR_REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Log in to Docker Hub
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.DOCKERHUB_REGISTRY }}
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Extract metadata
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          images: |
+            ${{ env.GHCR_REGISTRY }}/${{ env.GHCR_IMAGE_NAME }}
+            ${{ env.DOCKERHUB_REGISTRY }}/${{ env.DOCKERHUB_IMAGE_NAME }}
           tags: |
             type=ref,event=branch
             type=ref,event=pr
@@ -79,15 +92,20 @@ jobs:
             type=semver,pattern={{major}}
             type=sha,prefix=commit-{{date 'YYYYMMDD'}}-
             type=raw,value=latest,enable={{is_default_branch}}
+          labels: |
+            org.opencontainers.image.title=Pyone Play Ripper
+            org.opencontainers.image.description=Video ripper for Pyone Play content
+            org.opencontainers.image.vendor=aunghtetnay
+            org.opencontainers.image.licenses=MIT
 
-      - name: Build and push Docker image
-        id: build
+      - name: Build Docker image for security scan
+        id: build-scan
         uses: docker/build-push-action@v5
         with:
           context: .
-          platforms: linux/amd64,linux/arm64
-          push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.meta.outputs.tags }}
+          platforms: linux/amd64
+          push: false
+          tags: pyonerip:scan
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
@@ -105,7 +123,7 @@ jobs:
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ needs.build.outputs.image-digest }}
+          image-ref: 'pyonerip:scan'
           format: 'sarif'
           output: 'trivy-results.sarif'
 
@@ -118,23 +136,166 @@ jobs:
       - name: Run Trivy vulnerability scanner (Table format)
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ needs.build.outputs.image-digest }}
+          image-ref: 'pyonerip:scan'
           format: 'table'
           exit-code: '1'
           ignore-unfixed: true
           vuln-type: 'os,library'
           severity: 'CRITICAL,HIGH'
 
-  cleanup:
+      - name: Run Trivy configuration scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'pyonerip:scan'
+          format: 'json'
+          output: 'trivy-config.json'
+          scan-type: 'config'
+
+      - name: Upload Trivy results as artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: trivy-security-results
+          path: |
+            trivy-results.sarif
+            trivy-config.json
+          retention-days: 30
+
+  publish:
     runs-on: ubuntu-latest
-    needs: [build]
+    needs: [build, security-scan]
+    if: github.event_name != 'pull_request'
+    
+    outputs:
+      image-digest: ${{ steps.push.outputs.digest }}
+      image-tags: ${{ steps.meta.outputs.tags }}
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.GHCR_REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.DOCKERHUB_REGISTRY }}
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            ${{ env.GHCR_REGISTRY }}/${{ env.GHCR_IMAGE_NAME }}
+            ${{ env.DOCKERHUB_REGISTRY }}/${{ env.DOCKERHUB_IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+            type=sha,prefix=commit-{{date 'YYYYMMDD'}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+          labels: |
+            org.opencontainers.image.title=Pyone Play Ripper
+            org.opencontainers.image.description=Video ripper for Pyone Play content
+            org.opencontainers.image.vendor=aunghtetnay
+            org.opencontainers.image.licenses=MIT
+
+      - name: Build and push Docker image
+        id: push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            BUILDTIME=${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.created'] }}
+            VERSION=${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.version'] }}
+            REVISION=${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.revision'] }}
+
+  notify:
+    runs-on: ubuntu-latest
+    needs: [build, security-scan, publish]
     if: always() && github.event_name != 'pull_request'
     
     steps:
-      - name: Delete old container images
+      - name: Create deployment summary
+        run: |
+          echo "## Docker Build & Security Scan Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Published Images:" >> $GITHUB_STEP_SUMMARY
+          echo "- **GitHub Container Registry**: \`ghcr.io/aunghtetnay/pyonerip:latest\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Docker Hub**: \`docker.io/aunghtetnay/pyonerip:latest\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Build Info:" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit**: \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch**: \`${{ github.ref_name }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Build Status**: ${{ needs.build.result == 'success' && 'Success' || 'Failed' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Security Scan**: ${{ needs.security-scan.result == 'success' && 'Passed' || 'Issues Found' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Publish Status**: ${{ needs.publish.result == 'success' && 'Success' || 'Failed' }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Quick Start:" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
+          echo "# Pull from GitHub Container Registry" >> $GITHUB_STEP_SUMMARY
+          echo "docker pull ghcr.io/aunghtetnay/pyonerip:latest" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "# Or pull from Docker Hub" >> $GITHUB_STEP_SUMMARY
+          echo "docker pull aunghtetnay/pyonerip:latest" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "# Run the container" >> $GITHUB_STEP_SUMMARY
+          echo "docker run -p 3000:3000 ghcr.io/aunghtetnay/pyonerip:latest" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+
+      - name: Comment on PR with deployment info
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `## Docker Build Preview
+              
+              This PR would publish the following images:
+              - \`ghcr.io/aunghtetnay/pyonerip:pr-${{ github.event.number }}\`
+              - \`aunghtetnay/pyonerip:pr-${{ github.event.number }}\`
+              
+              **Security Scan**: ${{ needs.security-scan.result == 'success' && 'Passed' || 'Issues Found' }}
+              
+              Images will be published when this PR is merged to main.`
+            })
+
+  cleanup:
+    runs-on: ubuntu-latest
+    needs: [publish]
+    if: always() && github.event_name != 'pull_request'
+    
+    steps:
+      - name: Delete old GitHub Container Registry images
         uses: actions/delete-package-versions@v5
         with:
           package-name: ${{ github.event.repository.name }}
           package-type: 'container'
           min-versions-to-keep: 10
           delete-only-untagged-versions: true
+
+      - name: Clean up Docker build cache
+        run: |
+          echo "Cleaning up Docker build cache..."
+          docker builder prune --all --force || true
