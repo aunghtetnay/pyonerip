@@ -140,30 +140,7 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Download Docker image artifact
-        uses: actions/download-artifact@v4
-        continue-on-error: true
-        with:
-          name: docker-image
-          path: /tmp
-
-      - name: Load Docker image from artifact
-        id: load-artifact
-        continue-on-error: true
-        run: |
-          if [ -f "/tmp/pyonerip-image.tar" ]; then
-            echo "Loading Docker image from artifact..."
-            docker load --input /tmp/pyonerip-image.tar
-            echo "Listing loaded images..."
-            docker images | grep pyonerip || true
-            echo "artifact_loaded=true" >> $GITHUB_OUTPUT
-          else
-            echo "No artifact found, will rebuild image"
-            echo "artifact_loaded=false" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Build image for scanning (fallback)
-        if: steps.load-artifact.outputs.artifact_loaded != 'true'
+      - name: Build image for security scanning
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -172,6 +149,10 @@ jobs:
           tags: pyonerip:scan
           load: true
           cache-from: type=gha
+          build-args: |
+            BUILDTIME=${{ github.run_id }}
+            VERSION=scan-${{ github.sha }}
+            REVISION=${{ github.sha }}
 
       - name: Verify image exists
         run: |
@@ -181,13 +162,11 @@ jobs:
           docker run --rm pyonerip:scan echo "Image ready for scanning"
 
       - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@0.28.0
         with:
           image-ref: 'pyonerip:scan'
           format: 'sarif'
           output: 'trivy-results.sarif'
-          skip-files: '/tmp/*'
-          skip-dirs: '/tmp,/var/tmp'
 
       - name: Upload Trivy scan results to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v3
@@ -196,7 +175,7 @@ jobs:
           sarif_file: 'trivy-results.sarif'
 
       - name: Run Trivy vulnerability scanner (Table format)
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@0.28.0
         with:
           image-ref: 'pyonerip:scan'
           format: 'table'
@@ -204,13 +183,11 @@ jobs:
           ignore-unfixed: true
           vuln-type: 'os,library'
           severity: 'CRITICAL,HIGH'
-          skip-files: '/tmp/*'
-          skip-dirs: '/tmp,/var/tmp'
 
       - name: Run Trivy vulnerability scanner (Strict mode)
         id: trivy-strict
         continue-on-error: true
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@0.28.0
         with:
           image-ref: 'pyonerip:scan'
           format: 'table'
@@ -218,18 +195,16 @@ jobs:
           ignore-unfixed: true
           vuln-type: 'os,library'
           severity: 'CRITICAL,HIGH'
-          skip-files: '/tmp/*'
-          skip-dirs: '/tmp,/var/tmp'
 
-      - name: Run Trivy configuration scan
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: 'pyonerip:scan'
-          format: 'json'
-          output: 'trivy-config.json'
-          scan-type: 'config'
-          skip-files: '/tmp/*'
-          skip-dirs: '/tmp,/var/tmp'
+      - name: Fallback Trivy scan using Docker
+        if: failure()
+        run: |
+          echo "Trivy action failed, trying direct Docker command..."
+          echo "Available images:"
+          docker images
+          echo "Running Trivy directly..."
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
+            aquasec/trivy:latest image --format table --severity CRITICAL,HIGH pyonerip:scan
 
       - name: Upload Trivy results as artifact
         uses: actions/upload-artifact@v4
