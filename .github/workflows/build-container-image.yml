@@ -116,12 +116,76 @@ jobs:
           if-no-files-found: error
           retention-days: 1
 
+  # Security scanning job
+  security-scan:
+    runs-on: ubuntu-24.04
+    needs: [build-image]
+    if: ${{ inputs.push_to_images != '' }}
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build image for security scanning
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ${{ inputs.file_to_build }}
+          platforms: linux/amd64
+          push: false
+          tags: scan-image:latest
+          load: true
+          cache-from: ${{ inputs.cache && 'type=gha' || '' }}
+          build-args: |
+            PATCHWORK_DASHBOARD_VERSION_PRERELEASE=${{ inputs.version_prerelease }}
+            PATCHWORK_DASHBOARD_VERSION_METADATA=${{ inputs.version_metadata }}
+            SOURCE_COMMIT=${{ github.sha }}
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: 'scan-image:latest'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+      - name: Run Trivy vulnerability scanner (Table format)
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: 'scan-image:latest'
+          format: 'table'
+          exit-code: '0'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
+
+      - name: Run Trivy vulnerability scanner (Strict mode)
+        id: trivy-strict
+        continue-on-error: true
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: 'scan-image:latest'
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
+
   # Then merge the docker images into a single one
   merge-images:
     if: ${{ inputs.push_to_images != '' }}
     runs-on: ubuntu-24.04
     needs:
       - build-image
+      - security-scan
 
     env:
       PUSH_TO_IMAGES: ${{ inputs.push_to_images }}
