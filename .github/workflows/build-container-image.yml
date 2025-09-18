@@ -23,7 +23,6 @@ permissions:
   contents: read
   packages: write
   security-events: write  # Required for uploading SARIF results
-  actions: read           # Required for downloading artifacts
 
 # This builds multiple images with one runner each, allowing us to build for multiple architectures
 # using Github's runners.
