@@ -2,7 +2,8 @@
 
 [![Docker Build and Publish](https://github.com/aunghtetnay/pyonerip/actions/workflows/docker.yml/badge.svg)](https://github.com/aunghtetnay/pyonerip/actions/workflows/docker.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Docker Pulls](https://img.shields.io/docker/pulls/ghcr.io/aunghtetnay/pyonerip)](https://github.com/aunghtetnay/pyonerip/pkgs/container/pyonerip)
+[![Docker Pulls](https://img.shields.io/docker/pulls/ahnay/pyonerip)](https://hub.docker.com/r/ahnay/pyonerip)
+[![GHCR Pulls](https://img.shields.io/badge/GHCR-ghcr.io%2Faunghtetnay%2Fpyonerip-blue)](https://github.com/aunghtetnay/pyonerip/pkgs/container/pyonerip)
 
 A robust video ripper for Pyone Play content with Docker support and automated CI/CD pipeline.
 

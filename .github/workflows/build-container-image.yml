@@ -72,7 +72,15 @@ jobs:
         with:
           images: ${{ inputs.push_to_images }}
           flavor: ${{ inputs.flavor }}
-          labels: ${{ inputs.labels }}
+          labels: |
+            org.opencontainers.image.title=PyOne Rip
+            org.opencontainers.image.description=Video ripper for PyonePlay content - Download and process streaming videos
+            org.opencontainers.image.vendor=aunghtetnay
+            org.opencontainers.image.licenses=MIT
+            org.opencontainers.image.url=https://github.com/aunghtetnay/pyonerip
+            org.opencontainers.image.source=https://github.com/aunghtetnay/pyonerip
+            org.opencontainers.image.documentation=https://github.com/aunghtetnay/pyonerip#readme
+            ${{ inputs.labels }}
 
       - name: Build and push by digest
         id: build
